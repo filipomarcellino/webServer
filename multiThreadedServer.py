@@ -1,32 +1,37 @@
 import socket
 import threading
 
-HEADER = 64
 PORT = 5050
 SERVER = socket.gethostbyname(socket.gethostname())
 ADDR = (SERVER, PORT) 
-FORMAT = 'utf-8'
-DISCONNECT_MESSAGE = "!DISCONNECT"
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.bind(ADDR)
 
 def handle_client(conn, addr):
     print(f"[NEW CONNECTION] {addr} connected.")
+    previous = ""
+    while True:
+        conn, addr = server.accept()
+        req = conn.recv(1024).decode()
+        filename =  req.split()[1] #/test.html
+        if  req.split()[0] != 'GET' or   req.split()[2] != 'HTTP/1.1':
+            res = 'HTTP/1.1 400 BAD REQUEST\r\n\r\n'
+        elif filename != '/test.html':
+            res = 'HTTP/1.1 404 NOT FOUND\r\n\r\n%s Not Found' % filename
+        elif filename == '/test.html':
+            file = open(filename[1:])
+            output = file.read()
+            #if the contect is not identical to the previous content
+            if output != previous:
+                previous = output
+                res = 'HTTP/1.1 200 OK\n\n' + output 
+            else:
+                res = 'HTTP/1.1 304 NOT MODIFIED\n\nNot Modified'
+            file.close()
+        conn.send(res.encode())
+        conn.close()
 
-    connected = True
-    while connected:
-        msg_length = conn.recv(HEADER).decode(FORMAT) #will be stuck here until a message is received
-        if msg_length:
-            msg_length = int(msg_length)
-            msg = conn.recv(msg_length).decode(FORMAT)
-
-            if msg == DISCONNECT_MESSAGE:
-                connected = False
-
-            print(f"[{addr}] {msg}")
-            conn.send("Msg received".encode(FORMAT))
-    conn.close()
      
 def start():
     server.listen()
@@ -36,5 +41,6 @@ def start():
         thread = threading.Thread(target = handle_client, args=(conn, addr))
         thread.start()
         print(f"[ACTIVE CONNECTIONS] {threading.active_count() - 1}")
+
 print("[STARTING] server is starting...")
 start()
