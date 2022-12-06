@@ -13,5 +13,5 @@ def send(msg):
     client.send(message)
     print(client.recv(2048).decode())
 
-send("GET /test.html HTTP/1.1\r\n")
+send("POST /test.html HTTP/1.1\r\n")
 client.close()

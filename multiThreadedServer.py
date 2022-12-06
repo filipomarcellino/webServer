@@ -15,10 +15,11 @@ def handle_client(conn, addr):
         conn, addr = server.accept()
         req = conn.recv(1024).decode()
         filename =  req.split()[1] #/test.html
-        if  req.split()[0] != 'GET' or   req.split()[2] != 'HTTP/1.1':
-            res = 'HTTP/1.1 400 BAD REQUEST\r\n\r\n'
-        elif filename != '/test.html':
+        if filename != '/test.html':
             res = 'HTTP/1.1 404 NOT FOUND\r\n\r\n%s Not Found' % filename
+        elif  req.split()[0] != 'GET' or   req.split()[2] != 'HTTP/1.1':
+            res = 'HTTP/1.1 400 BAD REQUEST\r\n\r\n'
+
         elif filename == '/test.html':
             file = open(filename[1:])
             output = file.read()
