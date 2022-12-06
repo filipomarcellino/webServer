@@ -12,9 +12,8 @@ def main():
 
     server.listen()
     print("[STARTING] server is starting...")
-    print(f"[LISTENING] Proxy Server is listening on {SERVER}")
-    print(f"[LISTENING] Server is listening on {PORT}")
-    previous = ""
+    print(f"[LISTENING] Proxy Server is listening on {SERVER} on port {PORT}")
+
     while True:
         conn, addr = server.accept()
         req = conn.recv(1024).decode()
@@ -26,9 +25,9 @@ def main():
 
         content = fetch_file(filename)
         if content:
-                res = 'HTTP/1.0 200 OK FROM PROXY\n\n' + content
+                res = 'HTTP/1.1 200 OK \n\n' + content
         else:
-                res = 'HTTP/1.0 404 NOT FOUND FROM PROXY\n\n File Not Found'
+                res = 'HTTP/1.1 404 NOT FOUND \n\n File Not Found'
 
         
         conn.send(res.encode())
@@ -55,23 +54,20 @@ def fetch_file(filename):
 
 def fetch_from_cache(filename):
     try:
-        # Check if we have this file locally
         fin = open('cache' + filename)
         content = fin.read()
         fin.close()
-        # If we have it, let's send it
         return content
     except IOError:
         return None
 
 
 def fetch_from_server(filename):
-    url = 'http://127.0.0.1:8000' + filename
+    url = 'http://localhost:5050' + filename
     q = Request(url)
 
     try:
         res = urlopen(q)
-        # Grab the header and content from the server req
         res_headers = res.info()
         content = res.read().decode('utf-8')
         return content
@@ -84,6 +80,7 @@ def save_in_cache(filename, content):
     cached_file = open('cache' + filename, 'w')
     cached_file.write(content)
     cached_file.close()
+    print("saving ", filename, " to cache")
 
 
 if __name__ == '__main__':
